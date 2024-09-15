@@ -2,7 +2,7 @@
     "compilerOptions": {
         "outDir": "dist",
         "declaration": true,
-        "skipLibCheck": true
+        "skipLibCheck": true,
     },
     "exclude": ["node_modules", "dist", "test"]
 }

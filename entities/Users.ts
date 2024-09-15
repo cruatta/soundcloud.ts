@@ -46,20 +46,30 @@ export class Users {
     /**
      * Gets all of a users liked tracks.
      */
-    public likes = async (userResolvable: string | number, limit?: number) => {
+    public likes = async (userResolvable: string | number, limit?: number, offset?: string): Promise<SoundcloudTrack[]> => {
         const userID = await this.resolve.get(userResolvable)
-        let response = await this.api.getV2(`/users/${userID}/likes`, {limit: 50, offset: 0}) as any
+        let response = await this.api.getV2(`/users/${userID}/likes`, {limit: 50, offset}) as any
+        const collected: SoundcloudTrack[] = response.collection.map((r: any) => r.track)
+
+        const remaining = limit ? limit - collected.length: undefined;
         const tracks: SoundcloudTrack[] = []
-        let nextHref = response.next_href
-        while (nextHref && (!limit || tracks.length < limit)) {
-            tracks.push(...response.collection.map((r: any) => r.track))
-            const url = new URL(nextHref)
-            const params = {}
-            url.searchParams.forEach((value, key) => (params[key] = value))
-            response = await this.api.getURL(url.origin + url.pathname, params)
-            nextHref = response.next_href
+
+        const incomplete = limit === undefined || (limit >= collected.length)
+        if(incomplete) {
+            tracks.push(...collected)
+        } else {
+            tracks.push(...collected.slice(0, remaining));
         }
-        return tracks
+
+        if(incomplete) {
+            const nextHref = response.next_href;
+            if (nextHref) {
+                const url = new URL(nextHref);
+                const offset = url.searchParams.get('offset');
+                tracks.push(...await this.likes(userResolvable, remaining, offset));
+            }
+        }
+        return tracks;
     }
 
     /**
