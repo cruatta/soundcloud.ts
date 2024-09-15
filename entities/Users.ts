@@ -54,7 +54,7 @@ export class Users {
         const remaining = limit ? limit - collected.length: undefined;
         const tracks: SoundcloudTrack[] = []
 
-        const incomplete = limit === undefined || (limit >= collected.length)
+        const incomplete = limit === undefined || limit >= collected.length;
         if(incomplete) {
             tracks.push(...collected)
         } else {
